@@ -292,7 +292,7 @@ void MainWindow::updateLogStatus() {
         ui->logMatchCount->clear();
     } else {
         const auto matched = std::count_if(m_logLines.begin(), m_logLines.end(), [](const LogLine &line) { return line.visible; });
-        ui->logMatchCount->setText(tr("%1 / %2").arg(matched).arg(m_logLines.size()));
+        ui->logMatchCount->setText(QStringLiteral("%1 / %2").arg(matched).arg(m_logLines.size()));
     }
     ui->logJumpLatest->setVisible(!m_logFollow);
     ui->logJumpLatest->setText(m_logHeld.empty() ? tr("Jump to latest") : tr("Jump to latest (%1 new)").arg(m_logHeld.size()));

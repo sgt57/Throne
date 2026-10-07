@@ -634,9 +634,9 @@
              <widget class="QComboBox" name="font_size"/>
             </item>
             <item row="2" column="0">
-             <widget class="QLabel" name="label_log_font">
+             <widget class="QLabel" name="label_mono_font">
               <property name="text">
-               <string>Log Font</string>
+               <string>Monospace Font</string>
               </property>
              </widget>
             </item>
@@ -648,9 +648,9 @@
              </widget>
             </item>
             <item row="3" column="0">
-             <widget class="QLabel" name="label_log_font_size">
+             <widget class="QLabel" name="label_mono_font_size">
               <property name="text">
-               <string>Log Font Size</string>
+               <string>Monospace Font Size</string>
               </property>
              </widget>
             </item>
