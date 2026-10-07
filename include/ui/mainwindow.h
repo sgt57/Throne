@@ -14,8 +14,12 @@
 #include <QtDBus>
 #endif
 
+// The family the log view actually renders with: `preferred` if installed, else the first available fallback.
+QString ResolveLogFontFamily(const QString &preferred);
+
 #ifndef MW_INTERFACE
 
+#include <deque>
 #include <optional>
 #include <QKeyEvent>
 #include "include/ui/widget/TrayIcon.hpp"
@@ -336,6 +340,18 @@ private:
     QString logPendingText;
     bool logFlushScheduled = false;
 
+    // UI-thread view state. m_logLines is what the view renders (capped at max_log_line);
+    // while the user is scrolled up, arrivals wait in m_logHeld so the view stays frozen.
+    struct LogLine {
+        QString text;
+        bool visible = true;
+    };
+    std::deque<LogLine> m_logLines;
+    std::deque<QString> m_logHeld;
+    bool m_logFollow = true;
+    QRegularExpression m_logSearch;
+    QTimer *m_logSearchDebounce = nullptr;
+
     struct LogFilter {
         bool enableInclude = false;
         bool enableExclude = false;
@@ -351,6 +367,19 @@ private:
 
     // UI thread only.
     void flush_log_batch();
+
+    void setupLogView();
+
+    void releaseHeldLogs();
+
+    // Caps both queues at max_log_line; returns how many dropped lines were visible (rendered blocks).
+    int trimLogLines();
+
+    void rebuildLogView();
+
+    void applyLogSearch();
+
+    void updateLogStatus();
 
     bool should_print_log(const QString &log, const LogFilter &filter);
 

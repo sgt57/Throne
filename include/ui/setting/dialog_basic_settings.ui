@@ -468,13 +468,6 @@
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QCheckBox" name="log_auto_scroll">
-               <property name="text">
-                <string>Auto-scroll log</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </widget>
           </item>
@@ -639,6 +632,30 @@
             </item>
             <item row="1" column="1">
              <widget class="QComboBox" name="font_size"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_mono_font">
+              <property name="text">
+               <string>Monospace Font</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QFontComboBox" name="log_font_family">
+              <property name="toolTip">
+               <string>Monospace font for the log view. Unavailable families fall back to a built-in monospace list.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_mono_font_size">
+              <property name="text">
+               <string>Monospace Font Size</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QComboBox" name="log_font_size"/>
             </item>
            </layout>
           </widget>

@@ -66,7 +66,6 @@ namespace Configs {
             {"show_config_security",          &show_config_security},
             {"log_enable_include",            &log_enable_include},
             {"log_enable_exclude",            &log_enable_exclude},
-            {"log_auto_scroll",               &log_auto_scroll},
             {"enable_warp",                   &enable_warp},
             {"warp_tos_accepted",             &warp_tos_accepted},
             {"enable_dns_routing",            &enable_dns_routing},
@@ -99,6 +98,7 @@ namespace Configs {
             {"language",               &language},
             {"font_size",              &font_size},
             {"max_log_line",           &max_log_line},
+            {"log_font_size",          &log_font_size},
             {"stats_tab",              &stats_tab},
             {"connection_sort",        &connection_sort},
             {"traffic_stats_retention_days", &traffic_stats_retention_days},
@@ -144,6 +144,7 @@ namespace Configs {
             {"custom_inbound",             &custom_inbound},
             {"custom_route",               &custom_route_global},
             {"font",                       &font},
+            {"log_font_family",            &log_font_family},
             {"hk_mw",                      &hotkey_mainwindow},
             {"hk_group",                   &hotkey_group},
             {"hk_route",                   &hotkey_route},
@@ -283,8 +284,8 @@ namespace Configs {
                 continue;
             }
         }
-        // Nothing writes these back, so drop them or they keep overriding the migrated flags on every load.
-        db.exec("DELETE FROM settings WHERE key IN ('direct_dns_strategy', 'remote_dns_strategy')");
+        // Retired keys nothing writes back; the DNS ones would otherwise keep overriding the migrated flags on every load.
+        db.exec("DELETE FROM settings WHERE key IN ('direct_dns_strategy', 'remote_dns_strategy', 'log_auto_scroll')");
     }
 
     void SettingsRepo::saveAllSettings() const {

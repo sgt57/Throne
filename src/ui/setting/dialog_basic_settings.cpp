@@ -131,7 +131,6 @@ DialogBasicSettings::DialogBasicSettings(QWidget *parent)
 #endif
 
     ui->max_log_line->setText(QString::number(Configs::dataManager->settingsRepo->max_log_line));
-    D_LOAD_BOOL(log_auto_scroll)
     ui->log_level->setCurrentText(Configs::dataManager->settingsRepo->log_level);
     ui->xray_loglevel->setCurrentText(Configs::dataManager->settingsRepo->xray_log_level);
     ui->enable_log_include->setChecked(Configs::dataManager->settingsRepo->log_enable_include);
@@ -174,6 +173,14 @@ DialogBasicSettings::DialogBasicSettings(QWidget *parent)
         Configs::dataManager->settingsRepo->Save();
         adjustSize();
     });
+    ui->log_font_family->setCurrentFont(QFont(ResolveLogFontFamily(Configs::dataManager->settingsRepo->log_font_family)));
+    CACHE.shownLogFontFamily = ui->log_font_family->currentFont().family();
+    for (int i=7;i<=26;i++) {
+        ui->log_font_size->addItem(Int2String(i));
+    }
+    // Unset means "start from the UI font size"; saving pins whatever is shown.
+    const int logFontSize = Configs::dataManager->settingsRepo->log_font_size;
+    ui->log_font_size->setCurrentText(Int2String(logFontSize > 0 ? logFontSize : qApp->font().pointSize()));
     ui->theme->addItems(QStyleFactory::keys());
     ui->theme->addItem("QDarkStyle");
     // Custom stylesheet themes, not QStyleFactory keys.
@@ -408,7 +415,6 @@ void DialogBasicSettings::accept() {
     Configs::dataManager->settingsRepo->xray_log_level = ui->xray_loglevel->currentText().trimmed();
     Configs::dataManager->settingsRepo->log_enable_include = ui->enable_log_include->isChecked();
     Configs::dataManager->settingsRepo->log_enable_exclude = ui->enable_log_exclude->isChecked();
-    D_SAVE_BOOL(log_auto_scroll)
     Configs::dataManager->settingsRepo->log_include_keyword = SplitAndTrim(ui->log_include_keyword->toPlainText(), "\n", false);
     Configs::dataManager->settingsRepo->log_exclude_keyword = SplitAndTrim(ui->log_exclude_keyword->toPlainText(), "\n", false);
 
@@ -437,8 +443,16 @@ void DialogBasicSettings::accept() {
         Configs::dataManager->settingsRepo->show_config_security != ui->show_config_security->isChecked();
     D_SAVE_BOOL(show_config_security)
 
+    QString logFontFamily = ui->log_font_family->currentFont().family();
+    if (Configs::dataManager->settingsRepo->log_font_family.isEmpty() && logFontFamily == CACHE.shownLogFontFamily) logFontFamily.clear();
+    const int logFontSize = ui->log_font_size->currentText().toInt();
+    const bool logFontChanged = logFontFamily != Configs::dataManager->settingsRepo->log_font_family ||
+                                logFontSize != Configs::dataManager->settingsRepo->log_font_size;
+    Configs::dataManager->settingsRepo->log_font_family = logFontFamily;
+    Configs::dataManager->settingsRepo->log_font_size = logFontSize;
+
     if (Configs::dataManager->settingsRepo->max_log_line <= 0) {
-        Configs::dataManager->settingsRepo->max_log_line = 200;
+        Configs::dataManager->settingsRepo->max_log_line = 500;
     }
 
     // The PeriodicRunner reads these intervals live; no timer needs restarting.
@@ -496,6 +510,7 @@ void DialogBasicSettings::accept() {
     if (needChoosePort) changes << MwArg::ChoosePort;
     if (profileListDisplayChanged) changes << MwArg::ProfileListDisplay;
     if (killSwitchChanged) changes << MwArg::KillSwitch;
+    if (logFontChanged) changes << MwArg::LogFont;
     MW_dialog_message(MwMessage::UpdateSettings, changes);
     QDialog::accept();
 }

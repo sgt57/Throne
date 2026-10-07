@@ -291,7 +291,11 @@ void MainWindow::dialog_message_impl(MwMessage cmd, const QStringList &args) {
             icon_status.reset();
         }
         if (changed(MwArg::MaxLogLines)) {
-            qvLogDocument->setMaximumBlockCount(settings->max_log_line);
+            trimLogLines();
+            rebuildLogView();
+        }
+        if (changed(MwArg::LogFont)) {
+            applyLogBrowserFont();
         }
         if (changed(MwArg::DisableTray)) {
             tray->setVisible(!settings->disable_tray);
