@@ -12,6 +12,12 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QThread>
+#include <QElapsedTimer>
+#include <QEventLoop>
+#include <QHostInfo>
+#include <QNetworkProxyFactory>
+#include <QSslSocket>
+#include <QTimer>
 
 #include "include/api/RPC.h"
 #include "include/configs/generate.h"
@@ -660,6 +666,40 @@ void MainWindow::OpenDashboard() {
     });
 }
 
+// TEMP DIAG: times proxy lookup, DNS, TCP and TLS separately; remove after investigation.
+static void diagProbe(const QString &host) {
+    QElapsedTimer t;
+    t.start();
+    auto log = [&](const QString &stage) {
+        MW_show_log(QString("[Probe diag] %1 +%2ms %3").arg(host).arg(t.elapsed()).arg(stage));
+    };
+    log("system proxy query begin");
+    QStringList proxies;
+    for (const auto &p : QNetworkProxyFactory::systemProxyForQuery(QNetworkProxyQuery(QUrl("https://" + host)))) {
+        proxies << QString("type=%1 %2:%3").arg(int(p.type())).arg(p.hostName()).arg(p.port());
+    }
+    log("system proxy query done: " + proxies.join(", "));
+    const auto info = QHostInfo::fromName(host);
+    QStringList addrs;
+    for (const auto &a : info.addresses()) addrs << a.toString();
+    log(QString("dns done err=%1 addrs=%2").arg(info.errorString(), addrs.join(",")));
+
+    QSslSocket s;
+    s.setProxy(QNetworkProxy::NoProxy);
+    QEventLoop loop;
+    QObject::connect(&s, &QAbstractSocket::stateChanged, [&](QAbstractSocket::SocketState st) { log(QString("socket state %1").arg(int(st))); });
+    QObject::connect(&s, &QAbstractSocket::connected, [&] { log("tcp connected peer=" + s.peerAddress().toString()); });
+    QObject::connect(&s, &QSslSocket::sslErrors, [&](const QList<QSslError> &e) { log(QString("sslErrors count=%1").arg(e.size())); });
+    QObject::connect(&s, &QSslSocket::encrypted, [&] { log("tls encrypted"); loop.quit(); });
+    QObject::connect(&s, &QAbstractSocket::errorOccurred, [&](QAbstractSocket::SocketError e) {
+        log(QString("socket error %1 %2").arg(int(e)).arg(s.errorString()));
+        loop.quit();
+    });
+    QTimer::singleShot(20000, &loop, [&] { log("probe gave up after 20s"); loop.quit(); });
+    s.connectToHostEncrypted(host, 443);
+    loop.exec();
+}
+
 void MainWindow::CheckUpdate() {
     QString search;
 #ifdef Q_OS_WIN
@@ -698,6 +738,7 @@ void MainWindow::CheckUpdate() {
     }
 
     // Releases carry no checksum or signature, so TLS is all that vouches for the download URL and the archive.
+    diagProbe("api.github.com");
     HttpGetOptions options;
     options.strictTls = true;
     auto resp = NetworkRequestHelper::HttpGet("https://api.github.com/repos/throneproj/Throne/releases", options);
