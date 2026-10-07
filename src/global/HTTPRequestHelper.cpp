@@ -6,6 +6,7 @@
 #include <QNetworkRequest>
 #include <QSslSocket>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QApplication>
 #include <QStringList>
@@ -57,7 +58,22 @@ namespace Configs_network {
         if (insecure) ssl.setPeerVerifyMode(QSslSocket::PeerVerifyMode::VerifyNone);
         request.setSslConfiguration(ssl);
         for (const auto &[name, value] : options.headers) request.setRawHeader(name, value);
+        // TEMP DIAG: per-stage timing of the request; remove after investigation.
+        QElapsedTimer diagTimer;
+        diagTimer.start();
+        auto diag = [&diagTimer, url](const QString &stage) {
+            MW_show_log(QString("[HttpGet diag] %1 +%2ms %3").arg(url).arg(diagTimer.elapsed()).arg(stage));
+        };
+        diag("begin");
         auto _reply = accessManager.get(request);
+        diag("get() returned");
+        connect(_reply, &QNetworkReply::socketStartedConnecting, _reply, [&] { diag("socketStartedConnecting"); });
+        connect(_reply, &QNetworkReply::requestSent, _reply, [&] { diag("requestSent"); });
+        connect(_reply, &QNetworkReply::encrypted, _reply, [&] { diag("encrypted"); });
+        connect(_reply, &QNetworkReply::metaDataChanged, _reply, [&] { diag("metaDataChanged"); });
+        connect(_reply, &QNetworkReply::errorOccurred, _reply, [&](QNetworkReply::NetworkError code) {
+            diag(QString("errorOccurred code=%1 %2").arg(int(code)).arg(_reply->errorString()));
+        });
         connect(_reply, &QNetworkReply::sslErrors, _reply, [insecure](const QList<QSslError> &errors) {
             QStringList error_str;
             for (const auto &err: errors) {
@@ -82,6 +98,8 @@ namespace Configs_network {
         QEventLoop loop;
         connect(_reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
         loop.exec();
+        diag(QString("finished error=%1 http=%2").arg(int(_reply->error()))
+                 .arg(_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()));
         body += _reply->readAll();
 
         HTTPResponse result;
