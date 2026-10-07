@@ -1,10 +1,10 @@
-# TEMP DIAG: builds only the Windows x64 Throne.exe for the update-check timeout investigation.
+# Builds only the Windows x64 Throne.exe for the test branch.
 # The release package links Qt statically, so the artifact is a drop-in replacement for an installed Throne.exe.
-name: Diag Windows build
+name: Test Windows build
 on:
   push:
     branches:
-      - "diag/**"
+      - test
   workflow_dispatch:
 jobs:
   build:
@@ -69,7 +69,7 @@ jobs:
       - name: Uploading Artifact
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: Throne-diag-${{ github.sha }}-windows-amd64
+          name: Throne-test-${{ github.sha }}-windows-amd64
           path: |
             build/Throne.exe
             build/Throne.pdb
