@@ -173,21 +173,14 @@ DialogBasicSettings::DialogBasicSettings(QWidget *parent)
         Configs::dataManager->settingsRepo->Save();
         adjustSize();
     });
-    // Item 0 stands for "no override"; the family box stays editable for mono fonts Qt does not flag as fixed-pitch.
-    ui->log_font_family->addItem(tr("Default"));
-    for (const auto &family : QFontDatabase::families()) {
-        if (QFontDatabase::isFixedPitch(family) && !QFontDatabase::isPrivateFamily(family)) ui->log_font_family->addItem(family);
-    }
-    if (const auto &family = Configs::dataManager->settingsRepo->log_font_family; family.isEmpty()) {
-        ui->log_font_family->setCurrentIndex(0);
-    } else {
-        ui->log_font_family->setCurrentText(family);
-    }
-    ui->log_font_size->addItem(tr("Follow font size"), 0);
+    ui->log_font_family->setCurrentFont(QFont(ResolveLogFontFamily(Configs::dataManager->settingsRepo->log_font_family)));
+    CACHE.shownLogFontFamily = ui->log_font_family->currentFont().family();
     for (int i=7;i<=26;i++) {
-        ui->log_font_size->addItem(Int2String(i), i);
+        ui->log_font_size->addItem(Int2String(i));
     }
-    ui->log_font_size->setCurrentIndex(std::max(0, ui->log_font_size->findData(Configs::dataManager->settingsRepo->log_font_size)));
+    // Unset means "start from the UI font size"; saving pins whatever is shown.
+    const int logFontSize = Configs::dataManager->settingsRepo->log_font_size;
+    ui->log_font_size->setCurrentText(Int2String(logFontSize > 0 ? logFontSize : qApp->font().pointSize()));
     ui->theme->addItems(QStyleFactory::keys());
     ui->theme->addItem("QDarkStyle");
     // Custom stylesheet themes, not QStyleFactory keys.
@@ -450,9 +443,9 @@ void DialogBasicSettings::accept() {
         Configs::dataManager->settingsRepo->show_config_security != ui->show_config_security->isChecked();
     D_SAVE_BOOL(show_config_security)
 
-    QString logFontFamily = ui->log_font_family->currentText().trimmed();
-    if (logFontFamily == ui->log_font_family->itemText(0)) logFontFamily.clear();
-    const int logFontSize = ui->log_font_size->currentData().toInt();
+    QString logFontFamily = ui->log_font_family->currentFont().family();
+    if (Configs::dataManager->settingsRepo->log_font_family.isEmpty() && logFontFamily == CACHE.shownLogFontFamily) logFontFamily.clear();
+    const int logFontSize = ui->log_font_size->currentText().toInt();
     const bool logFontChanged = logFontFamily != Configs::dataManager->settingsRepo->log_font_family ||
                                 logFontSize != Configs::dataManager->settingsRepo->log_font_size;
     Configs::dataManager->settingsRepo->log_font_family = logFontFamily;

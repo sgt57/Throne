@@ -38,6 +38,8 @@ private:
         bool updateDisableTray = false;
         bool updateTrayIcon = false;
         bool updateMaxLogLines = false;
+        // What the log font box showed on open; left untouched, an unset family keeps following the fallback list.
+        QString shownLogFontFamily;
         bool updateDisableAdmin = false;
     } CACHE;
 

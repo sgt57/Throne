@@ -3,6 +3,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QFontDatabase>
+#include <QFontInfo>
 #include <QMenu>
 #include <QMutexLocker>
 #include <QScrollBar>
@@ -18,10 +19,9 @@ namespace {
     constexpr int LOG_BOTTOM_SLACK = 4;
     constexpr int LOG_SEARCH_DEBOUNCE_MS = 150;
 
-    // Tried in order after the user's choice; "monospace" is the generic last resort.
+    // Tried in order after the user's choice; the generic "monospace" is the last resort.
     const QStringList LOG_FONT_FALLBACKS = {
-        "Cascadia Mono", "Consolas", "JetBrains Mono", "SF Mono", "Menlo", "Monaco",
-        "DejaVu Sans Mono", "Liberation Mono", "Noto Sans Mono", "Ubuntu Mono", "Courier New",
+        "Consolas", "Menlo", "SF Mono", "DejaVu Sans Mono", "Noto Sans Mono", "Ubuntu Mono",
     };
 
     int logLineLimit() {
@@ -53,12 +53,22 @@ namespace {
     }
 }
 
+QString ResolveLogFontFamily(const QString &preferred) {
+    if (const QString chosen = preferred.trimmed(); !chosen.isEmpty() && QFontDatabase::hasFamily(chosen)) return chosen;
+    for (const auto &family : LOG_FONT_FALLBACKS) {
+        if (QFontDatabase::hasFamily(family)) return family;
+    }
+    QFont generic(QStringLiteral("monospace"));
+    generic.setStyleHint(QFont::Monospace);
+    return QFontInfo(generic).family();
+}
+
 void MainWindow::applyLogBrowserFont() {
     const auto &settings = Configs::dataManager->settingsRepo;
+    // The whole list, not just the resolved family, so glyphs missing from the first font still fall back in order.
     QStringList families;
     if (const QString chosen = settings->log_font_family.trimmed(); !chosen.isEmpty()) families << chosen;
     families << LOG_FONT_FALLBACKS;
-    families << QFontDatabase::systemFont(QFontDatabase::FixedFont).family();
     families << QStringLiteral("monospace");
     families.removeDuplicates();
 

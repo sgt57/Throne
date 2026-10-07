@@ -641,10 +641,7 @@
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QComboBox" name="log_font_family">
-              <property name="editable">
-               <bool>true</bool>
-              </property>
+             <widget class="QFontComboBox" name="log_font_family">
               <property name="toolTip">
                <string>Monospace font for the log view. Unavailable families fall back to a built-in monospace list.</string>
               </property>
