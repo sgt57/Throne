@@ -167,11 +167,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     ui->splitter->restoreState(DecodeB64IfValid(Configs::dataManager->settingsRepo->splitter_state));
     setLogHighlighter(themeUsesDarkLog(Configs::dataManager->settingsRepo->theme));
-    qvLogDocument->setUndoRedoEnabled(false);
-    qvLogDocument->setMaximumBlockCount(Configs::dataManager->settingsRepo->max_log_line);
-    ui->masterLogBrowser->setUndoRedoEnabled(false);
-    ui->masterLogBrowser->setDocument(qvLogDocument);
-    applyLogBrowserFont();
+    setupLogView();
     updateLogFilterFields();
     runOnThread([=, this] {
         log_process_loop();
