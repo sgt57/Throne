@@ -233,6 +233,11 @@ void ActivateWindow(QWidget *w);
 
 void HideWindow(QWidget *w);
 
+QStringList LogFontFamilies(const QString &preferred);
+
+// The family the log view actually renders with.
+QString ResolveLogFontFamily(const QString &preferred);
+
 void runOnUiThread(const std::function<void()> &callback, bool wait = false);
 
 void runOnNewThread(const std::function<void()> &callback, bool wait = false);

@@ -14,9 +14,6 @@
 #include <QtDBus>
 #endif
 
-// The family the log view actually renders with: `preferred` if installed, else the first available fallback.
-QString ResolveLogFontFamily(const QString &preferred);
-
 #ifndef MW_INTERFACE
 
 #include <deque>

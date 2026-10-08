@@ -178,9 +178,9 @@ DialogBasicSettings::DialogBasicSettings(QWidget *parent)
     for (int i=7;i<=26;i++) {
         ui->log_font_size->addItem(Int2String(i));
     }
-    // Unset means "start from the UI font size"; saving pins whatever is shown.
     const int logFontSize = Configs::dataManager->settingsRepo->log_font_size;
     ui->log_font_size->setCurrentText(Int2String(logFontSize > 0 ? logFontSize : qApp->font().pointSize()));
+    CACHE.shownLogFontSize = ui->log_font_size->currentText().toInt();
     ui->theme->addItems(QStyleFactory::keys());
     ui->theme->addItem("QDarkStyle");
     // Custom stylesheet themes, not QStyleFactory keys.
@@ -445,7 +445,8 @@ void DialogBasicSettings::accept() {
 
     QString logFontFamily = ui->log_font_family->currentFont().family();
     if (Configs::dataManager->settingsRepo->log_font_family.isEmpty() && logFontFamily == CACHE.shownLogFontFamily) logFontFamily.clear();
-    const int logFontSize = ui->log_font_size->currentText().toInt();
+    int logFontSize = ui->log_font_size->currentText().toInt();
+    if (Configs::dataManager->settingsRepo->log_font_size <= 0 && logFontSize == CACHE.shownLogFontSize) logFontSize = 0;
     const bool logFontChanged = logFontFamily != Configs::dataManager->settingsRepo->log_font_family ||
                                 logFontSize != Configs::dataManager->settingsRepo->log_font_size;
     Configs::dataManager->settingsRepo->log_font_family = logFontFamily;

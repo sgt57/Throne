@@ -642,6 +642,9 @@
             </item>
             <item row="2" column="1">
              <widget class="QFontComboBox" name="log_font_family">
+              <property name="fontFilters">
+               <set>QFontComboBox::FontFilter::MonospacedFonts</set>
+              </property>
               <property name="toolTip">
                <string>Monospace font for the log view. Unavailable families fall back to a built-in monospace list.</string>
               </property>
